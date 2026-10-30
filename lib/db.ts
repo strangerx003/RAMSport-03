@@ -16,9 +16,19 @@ const globalRef = globalThis as unknown as { __reliaDb?: DatabaseSync };
 export function getDb(): DatabaseSync {
   if (globalRef.__reliaDb) return globalRef.__reliaDb;
 
-  const dir = process.env.RELIA_DATA_DIR || path.join(process.cwd(), "data");
-  fs.mkdirSync(dir, { recursive: true });
-  fs.mkdirSync(path.join(dir, "reports"), { recursive: true });
+  const preferredDir = process.env.RELIA_DATA_DIR || path.join(process.cwd(), "data");
+  let dir = preferredDir;
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(path.join(dir, "reports"), { recursive: true });
+  } catch {
+    /* Vercel serverless filesystem (/var/task) is read-only. Fall back to /tmp
+       which is writable. Seed IDs are fixed so demo logins survive across
+       serverless invocations. User-created data is ephemeral on Vercel. */
+    dir = "/tmp/relia-data";
+    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(path.join(dir, "reports"), { recursive: true });
+  }
 
   const db = new DatabaseSync(path.join(dir, "relialedger.db"));
   db.exec("PRAGMA journal_mode = WAL");
