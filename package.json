@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "node -e \"require('fs').rmSync('.next', {recursive:true, force:true});\"",
     "dev": "next dev",
-    "build": "npm run clean && next build && xcopy .next\\static static /E /I /Y",
+    "build": "next build",
     "start": "node .next/standalone/server.js",
     "typecheck": "tsc --noEmit"
   },
